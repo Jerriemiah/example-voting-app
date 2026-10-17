@@ -24,5 +24,16 @@ RUN dotnet publish -c release -o /app -a $TARGETARCH --self-contained false --no
 # app image
 FROM mcr.microsoft.com/dotnet/runtime:7.0
 WORKDIR /app
-COPY --from=build /app .
+
+# 1. Create the user AND fix the folder permissions in one shot
+RUN useradd -u 10001 -U --no-create-home --shell /bin/false app && \
+    chown -R app:app /app
+
+# 2. Copy the files and assign ownership
+COPY --from=build --chown=app:app /app .
+
+# 3. Switch to the non-root user
+USER app
+
 ENTRYPOINT ["dotnet", "Worker.dll"]
+
