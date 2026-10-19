@@ -22,8 +22,17 @@ CMD ["python", "app.py"]
 # final defines the stage that will bundle the application for production
 FROM base AS final
 
+# 1. Create the user AND fix the folder permissions in one shot
+RUN useradd -u 10001 -U --create-home --shell /bin/false app && \
+    chown -R app:app /home/app 
+    # && \ chown -R app:app /usr/local/app
+
 # Copy our code from the current folder to the working directory inside the container
-COPY . .
+# COPY . .
+COPY --chown=app:app . .
+
+# 3. Switch to the non-root user
+USER app
 
 # Make port 80 available for links and/or publish
 EXPOSE 80
