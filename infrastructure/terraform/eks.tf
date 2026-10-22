@@ -5,9 +5,15 @@ module "eks" {
   name               = var.cluster_name
   kubernetes_version = var.kubernetes_version
 
-  endpoint_public_access = true
+  endpoint_public_access  = true
+  endpoint_private_access = true
+
+  endpoint_public_access_cidrs = [
+    "0.0.0.0/0"
+  ]
 
   vpc_id = data.aws_vpc.default.id
+
   subnet_ids = [
     aws_subnet.subnet_1.id,
     aws_subnet.subnet_2.id
@@ -19,7 +25,9 @@ module "eks" {
     coredns                = {}
     eks-pod-identity-agent = {}
     kube-proxy             = {}
-    vpc-cni                = {}
+    vpc-cni = {
+      before_compute = true
+    }
   }
 
   eks_managed_node_groups = {

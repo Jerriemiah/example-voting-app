@@ -23,7 +23,14 @@ output "default_vpc_id" {
   value       = data.aws_vpc.default.id
 }
 
+#output "selected_subnet_ids" {
+#  description = "Default VPC subnet IDs supplied to EKS"
+#  value       = local.eks_subnet_ids
+#}
 output "selected_subnet_ids" {
-  description = "Default VPC subnet IDs supplied to EKS"
-  value       = local.eks_subnet_ids
+  description = "Terraform-managed default VPC subnet IDs supplied to EKS"
+  value = [
+    aws_subnet.subnet_1.id,
+    aws_subnet.subnet_2.id,
+  ]
 }
