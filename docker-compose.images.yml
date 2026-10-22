@@ -6,7 +6,7 @@
 
 services:
   vote:
-    image: dockersamples/examplevotingapp_vote
+    image: dockersamples/examplevotingapp_vote@sha256:7102d3b952ec84e3541ee12e7217e320c52aed60b13501c3158f46376a907466
     depends_on:
       redis:
         condition: service_healthy 
@@ -17,7 +17,7 @@ services:
       - back-tier
 
   result:
-    image: dockersamples/examplevotingapp_result
+    image: dockersamples/examplevotingapp_result@sha256:06c50992ab258e1d83406784040842bb920f6938eabac19261e7ec634f878935
     depends_on:
       db:
         condition: service_healthy 
@@ -28,7 +28,7 @@ services:
       - back-tier
 
   worker:
-    image: dockersamples/examplevotingapp_worker
+    image: dockersamples/examplevotingapp_worker@sha256:c8a8571065479c12567e8e440836e543d185c678cd4781a32b100f71e8f39c86
     depends_on:
       redis:
         condition: service_healthy 
@@ -38,7 +38,7 @@ services:
       - back-tier
 
   redis:
-    image: redis:alpine
+    image: redis:alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0
     volumes:
       - "./healthchecks:/healthchecks"
     healthcheck:
@@ -48,7 +48,7 @@ services:
       - back-tier
 
   db:
-    image: postgres:15-alpine
+    image: postgres:15-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
