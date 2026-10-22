@@ -4,3 +4,33 @@ bin/
 obj/
 .vs/
 node_modules/
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+!terraform.tfvars.example
+
+# Terraform working directory
+**/.terraform/*
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Terraform saved plan files
+*.tfplan
+tfplan
+destroy.tfplan
+recreate.tfplan
+
+# Terraform variable files that may contain secrets
+*.tfvars
+!terraform.tfvars.example
+
+# Kubernetes secrets
+k8s-specifications/secret.yaml
+k8s-specifications/*secret*.yaml
