@@ -25,6 +25,11 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      
+      - name: Lowercase Repository Owner
+        id: lowercase_owner
+        run: |
+          echo "IMAGE_NAMESPACE=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/example-voting-app" >> $GITHUB_ENV
 
       - name: Set up Python
         uses: actions/setup-python@v5
