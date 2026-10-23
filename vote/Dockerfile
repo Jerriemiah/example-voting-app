@@ -1,41 +1,62 @@
 # base defines a base stage that uses the official python runtime base image
-# FROM python:3.11-slim AS base
-FROM python:3.11-slim-trixie@sha256:e88e9763f943ec1834f992a4b51e0f24500486803e8bc534e5767af9ea65f6ce AS base
-# Add curl for healthcheck
+# ---------- Build dependencies ----------
+FROM python:3.13-slim-trixie@sha256:57b29a7c050c4e679e4bea572e14b3965cf4b5839de2da49d55e49ffc4024f39 AS builder
+
+WORKDIR /usr/local/app
+
+COPY requirements.txt ./requirements.txt
+
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/python -m pip install --no-cache-dir --upgrade \
+        pip \
+        setuptools \
+        wheel && \
+    /opt/venv/bin/python -m pip install --no-cache-dir \
+        -r requirements.txt
+
+
+# ---------- Development image ----------
+FROM builder AS dev
+
+COPY . .
+
+ENV PATH="/opt/venv/bin:${PATH}"
+ENV FLASK_ENV=development
+
+RUN /opt/venv/bin/python -m pip install --no-cache-dir watchdog
+
+CMD ["python", "app.py"]
+
+
+# ---------- Production image ----------
+FROM python:3.13-slim-trixie@sha256:57b29a7c050c4e679e4bea572e14b3965cf4b5839de2da49d55e49ffc4024f39 AS final
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the application directory
 WORKDIR /usr/local/app
 
-# Install our requirements.txt
-COPY requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN useradd -u 10001 -U --create-home --shell /bin/false app
 
-# dev defines a stage for development, where it'll watch for filesystem changes
-FROM base AS dev
-RUN pip install watchdog
-ENV FLASK_ENV=development
-CMD ["python", "app.py"]
+COPY --from=builder /opt/venv /opt/venv
 
-# final defines the stage that will bundle the application for production
-FROM base AS final
+# Remove old globally-installed package metadata from the base image.
+# The current, patched packages are in /opt/venv.
+RUN rm -rf \
+    /usr/local/lib/python3.13/site-packages/msgpack \
+    /usr/local/lib/python3.13/site-packages/msgpack-*.dist-info \
+    /usr/local/lib/python3.13/site-packages/setuptools \
+    /usr/local/lib/python3.13/site-packages/setuptools-*.dist-info \
+    /usr/local/lib/python3.13/site-packages/urllib3 \
+    /usr/local/lib/python3.13/site-packages/urllib3-*.dist-info
 
-# 1. Create the user AND fix the folder permissions in one shot
-RUN useradd -u 10001 -U --create-home --shell /bin/false app && \
-    chown -R app:app /home/app 
-    # && \ chown -R app:app /usr/local/app
-
-# Copy our code from the current folder to the working directory inside the container
-# COPY . .
 COPY --chown=app:app . .
 
-# 3. Switch to the non-root user
+ENV PATH="/opt/venv/bin:${PATH}"
+
 USER app
 
-# Make port 80 available for links and/or publish
 EXPOSE 80
 
-# Define our command to be run when launching the container
 CMD ["gunicorn", "app:app", "-b", "0.0.0.0:80", "--log-file", "-", "--access-logfile", "-", "--workers", "4", "--keep-alive", "0"]
