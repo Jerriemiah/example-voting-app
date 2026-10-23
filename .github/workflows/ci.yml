@@ -15,7 +15,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAMESPACE: ${{ github.repository_owner }}/example-voting-app
+  #IMAGE_NAMESPACE: ${{ github.repository_owner }}/example-voting-app
 
 jobs:
   validate:
