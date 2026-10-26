@@ -26,10 +26,19 @@ crash.*.log
 tfplan
 destroy.tfplan
 recreate.tfplan
-
-# Terraform variable files that may contain secrets
 *.tfvars
 !terraform.tfvars.example
+# Terraform local files
+infrastructure/terraform/.terraform/
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.*
+infrastructure/terraform/*.tfplan
+infrastructure/terraform/terraform.tfvars
+
+# Local backups
+*.bak
+
+
 
 # Kubernetes secrets
 k8s-specifications/secret.yaml
