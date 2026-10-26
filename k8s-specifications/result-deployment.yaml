@@ -15,7 +15,8 @@ spec:
         app: result
     spec:
       containers:
-      - image: dockersamples/examplevotingapp_result
+      - image: ghcr.io/jerriemiah/example-voting-app-result:16851844c4be1b7ed2b92636209ef20efb7a8aaf
+        imagePullPolicy: Always
         name: result
         ports:
         - containerPort: 80
