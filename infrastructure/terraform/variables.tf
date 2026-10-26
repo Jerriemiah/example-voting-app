@@ -39,3 +39,8 @@ variable "max_size" {
   type        = number
   default     = 2
 }
+
+variable "allowed_admin_cidr" {
+  description = "CIDR allowed to access the voting app NodePorts during testing"
+  type        = string
+}
