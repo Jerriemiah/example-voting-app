@@ -14,7 +14,7 @@ Application code
 → Helm rollback
 ```
 
-![Architecture](architecture.excalidraw.png)
+![Architecture](voting_app_architecture_diagram.jpg)
 
 ## Project Status
 
@@ -216,18 +216,18 @@ docker compose down -v
 
 The Dockerfiles and Compose infrastructure image references use SHA-256 digests instead of relying only on mutable tags.
 
-Examples:
+Examples (as used for this project):
 
 ```dockerfile
-FROM python:3.11-slim-trixie@sha256:<digest>
+FROM python:3.13-slim-trixie@sha256:57b29a7c050c4e679e4bea572e14b3965cf4b5839de2da49d55e49ffc4024f39
 ```
 
 ```dockerfile
-FROM node:18-bookworm-slim@sha256:<digest>
+FROM node:18-bookworm-slim@sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e
 ```
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/runtime:7.0@sha256:<digest>
+FROM mcr.microsoft.com/dotnet/runtime:7.0@sha256:d32bd65cf5843f413e81f5d917057c82da99737cb1637e905a1a4bc2e7ec6c8d AS build
 ```
 
 The digest ensures that the exact referenced image content is used during the build.
@@ -484,10 +484,11 @@ helm rollback voting-app 1 --namespace <NAMESPACE>
 Rollback evidence:
 
 ```text
-REVISION  UPDATED                  STATUS      CHART              APP VERSION  DESCRIPTION
-1         <timestamp>              superseded  voting-app-0.1.0   1.16.0       Install complete
-2         <timestamp>              superseded  voting-app-0.1.0   1.16.0       Upgrade complete
-3         <timestamp>              deployed    voting-app-0.1.0   1.16.0       Rollback to 1
+REVISION    UPDATED                      STATUS        CHART                APP VERSION    DESCRIPTION
+1           Tue Oct 27 06:33:52 2026     superseded    voting-app-0.1.0     1.16.0          Install complete
+2           Tue Oct 27 09:51:45 2026     superseded    voting-app-0.1.0     1.16.0          Upgrade complete
+3           Tue Oct 27 10:14:34 2026     deployed      voting-app-0.1.0     1.16.0          Rollback to 1
+
 ```
 
 The Helm history output is the primary rollback evidence because it explicitly records that revision 3 restored the application to revision 1. The recovered Result Pod returned to a healthy state and used the known-good SHA-tagged image.
