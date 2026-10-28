@@ -13,31 +13,10 @@ Application code
 → Deliberate failure
 → Helm rollback
 ```
+## Architecture
 
 ![Architecture](voting_app_architecture_diagram.jpg)
 
-## Project Status
-
-### Completed: Step 2 — Container Hardening
-
-- Base images are pinned by digest.
-- Application containers run as non-root users.
-- `.dockerignore` files are present for the relevant build contexts.
-- All application images build successfully.
-- All application services start successfully.
-- The production-oriented Compose configuration is the default `docker-compose.yml`.
-- The development configuration is preserved as `docker-compose.development.yml`.
-
-### Completed: Capstone 1 — Terraform, EKS, CI/CD, Helm, and Rollback
-
-- Terraform provisions the AWS VPC, subnets, EKS cluster, managed node group, and required security-group rules.
-- GitHub Actions validates the application, runs integration tests, builds images, scans them with Trivy, and publishes SHA-tagged images to GHCR.
-- A single Helm chart deploys Vote, Result, Worker, Redis, and PostgreSQL to EKS.
-- The application was deployed successfully and verified end to end.
-- A deliberately faulty image upgrade was performed and recovered using a Helm rollback.
-- Terraform state and plan files remain local and are excluded from Git.
-
-## Architecture
 
 | Service | Technology | Responsibility | Runtime user |
 |---|---|---|---|
