@@ -144,3 +144,85 @@ jobs:
         run: |
           docker push \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}-${{ matrix.image_name }}:${{ github.sha }}"
+
+  deploy:
+    name: Deploy to Amazon EKS with Helm
+    runs-on: ubuntu-latest
+    needs: build-scan-publish
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+      KUBERNETES_NAMESPACE: voting-app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Lowercase Repository Owner
+        run: |
+          echo "IMAGE_NAMESPACE=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')/example-voting-app" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name "${EKS_CLUSTER_NAME}" \
+            --region "${AWS_REGION}"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - name: Deploy application with Helm
+        run: |
+          helm upgrade --install voting-app ./voting-app \
+            --namespace "${KUBERNETES_NAMESPACE}" \
+            --create-namespace \
+            --set vote.image.tag=${GITHUB_SHA} \
+            --set result.image.tag=${GITHUB_SHA} \
+            --set worker.image.tag=${GITHUB_SHA}
+
+      - name: Wait for Vote rollout
+        run: |
+          kubectl rollout status deployment/voting-app-vote \
+            --namespace "${KUBERNETES_NAMESPACE}" \
+            --timeout=180s
+
+      - name: Wait for Result rollout
+        run: |
+          kubectl rollout status deployment/voting-app-result \
+            --namespace "${KUBERNETES_NAMESPACE}" \
+            --timeout=180s
+
+      - name: Wait for Worker rollout
+        run: |
+          kubectl rollout status deployment/voting-app-worker \
+            --namespace "${KUBERNETES_NAMESPACE}" \
+            --timeout=180s
+
+      - name: Verify application endpoints
+        run: |
+          kubectl run ci-smoke-test --rm -i \
+            --image=curlimages/curl:8.10.1 \
+            --restart=Never \
+            --namespace "${KUBERNETES_NAMESPACE}" \
+            -- curl -fsS http://vote:8080/ >/dev/null
+
+          kubectl run ci-smoke-test-result --rm -i \
+            --image=curlimages/curl:8.10.1 \
+            --restart=Never \
+            --namespace "${KUBERNETES_NAMESPACE}" \
+            -- curl -fsS http://result:8081/ >/dev/null  
