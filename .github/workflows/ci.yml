@@ -215,13 +215,13 @@ jobs:
 
       - name: Verify application endpoints
         run: |
-          kubectl run ci-smoke-test --rm \
+          kubectl run ci-smoke-test --rm -i \
             --image=curlimages/curl:8.10.1 \
             --restart=Never \
             --namespace "${KUBERNETES_NAMESPACE}" \
             -- curl -fsS http://vote:8080/ >/dev/null
 
-          kubectl run ci-smoke-test-result --rm \
+          kubectl run ci-smoke-test-result --rm -i \
             --image=curlimages/curl:8.10.1 \
             --restart=Never \
             --namespace "${KUBERNETES_NAMESPACE}" \
