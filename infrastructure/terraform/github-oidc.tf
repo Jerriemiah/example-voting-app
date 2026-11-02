@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "github_oidc_trust" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>:ref:refs/heads/master"]
+      values   = ["repo:Jerriemiah/example-voting-app:ref:refs/heads/master"]
     }
   }
 }
