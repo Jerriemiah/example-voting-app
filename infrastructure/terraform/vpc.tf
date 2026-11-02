@@ -51,3 +51,18 @@ resource "aws_route_table_association" "subnet_2_assoc" {
   subnet_id      = aws_subnet.subnet_2.id
   route_table_id = data.aws_route_table.default.id
 }
+
+# Dynamically find the Internet Gateway attached to the default VPC
+data "aws_internet_gateway" "default" {
+  filter {
+    name   = "attachment.vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+# Ensure a default route to the Internet Gateway exists on the main route table
+resource "aws_route" "public_internet_access" {
+  route_table_id         = data.aws_route_table.default.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = data.aws_internet_gateway.default.id
+}
