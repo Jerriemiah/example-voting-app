@@ -12,6 +12,8 @@ Application code
 → Helm deployment
 → Deliberate failure
 → Helm rollback
+→ Automated Helm deployment from GitHub Actions.
+→ Stores Terraform state remotely.
 ```
 ## Architecture
 
@@ -566,18 +568,47 @@ For an `ImagePullBackOff` or another Pod failure, inspect its events and logs:
 kubectl describe pod <POD_NAME> -n <NAMESPACE>
 kubectl logs <POD_NAME> -n <NAMESPACE>
 ```
-
 The `Events` section usually identifies an invalid image reference, registry permissions issue, network problem, or scheduling issue.
+
+
+## Automated CI/CD & Remote Backend Workflow
+
+### Remote Terraform State (S3 & DynamoDB)
+This project uses a production-grade remote backend for Terraform state management to ensure safety and team collaboration:
+- **S3 Bucket**: Stores the centralized `terraform.tfstate` file with encryption and versioning enabled.
+- **DynamoDB Table**: Handles state locking via a `LockID` partition key to prevent simultaneous conflicting applies.
+
+Configure your backend block inside `versions.tf`:
+```hcl
+backend "s3" {
+  bucket         = "your-terraform-state-bucket-name"
+  key            = "voting-app/terraform.tfstate"
+  region         = "eu-north-1"
+  dynamodb_table = "terraform-lock-table"
+  encrypt        = true
+}
+```
+
+###GitHub Actions OIDC Authentication & Automated Deployment
+The CI/CD pipeline authenticates with AWS securely without hardcoded long-lived credentials by using OpenID Connect (OIDC) via an IAM Role assumption (aws-actions/configure-aws-credentials@v4).
+
+ - The pipeline execution flow on every push to master:
+ - Validate & Test: Lints code and runs Docker Compose integration tests.
+ - Build, Scan & Publish: Builds container images, scans for vulnerabilities using Trivy, tags them with the immutable Git commit SHA, and pushes them to the GitHub Container Registry (GHCR).
+ - Deploy to EKS: Assumes the AWS IAM role via OIDC, updates the kubeconfig context, grants cluster admin privileges via EKS Access Entries, and upgrades the application using Helm.
+
 
 ## Next Steps
 
 Potential production improvements include:
 
-- Kubernetes `securityContext` settings for all workloads.
-- Readiness and liveness probes.
-- Kubernetes Secrets for database credentials.
-- Persistent volumes for PostgreSQL.
-- Ingress with TLS instead of NodePort access.
+- Ingress Controller with TLS: Replace NodePort services with an Ingress controller and automated certificate management.
+- GitOps with Argo CD: Transition from GitHub Actions push deployments to continuous reconciliation via Argo CD.
+- Observability Stack: Implement Prometheus, Grafana, Fluent Bit, and OpenTelemetry for advanced monitoring and distributed tracing.
 - Horizontal Pod Autoscaling.
-- Automated Helm deployment from GitHub Actions.
-- Automated rollback on failed deployment health checks.
+  
+
+
+
+
+
