@@ -25,6 +25,7 @@ module "eks" {
     coredns                = {}
     eks-pod-identity-agent = {}
     kube-proxy             = {}
+
     vpc-cni = {
       before_compute = true
     }

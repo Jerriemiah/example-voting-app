@@ -60,9 +60,9 @@ module "github_actions_access_entry" {
 
 # Grant the GitHub Actions IAM role administrative access to the EKS cluster
 resource "aws_eks_access_entry" "github_actions" {
-  cluster_name      = module.eks.cluster_name
-  principal_arn     = aws_iam_role.github_actions_eks_deploy.arn
-  type              = "STANDARD"
+  cluster_name  = module.eks.cluster_name
+  principal_arn = aws_iam_role.github_actions_eks_deploy.arn
+  type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "github_actions_admin" {
